@@ -20,7 +20,7 @@ class SolarSystem {
         this.setupRenderer();
         this.setupCamera();
         this.setupLights();
-        this.createSkybox.bind(this);
+        //this.createSkybox.bind(this);
         this.createStars(); // Add this line to create stars
         this.createPlanets();
         //console.log(this.celestialBodies.length)
@@ -46,7 +46,7 @@ class SolarSystem {
         const sunLight = new THREE.PointLight(0xffffff, 1.5);
         this.scene.add(sunLight);
     }
-
+/*
     createSkybox() {
         const loader = new THREE.CubeTextureLoader();
         const texture = loader.load([
@@ -64,11 +64,10 @@ class SolarSystem {
         }
     );
         this.scene.background = texture;
-    }
+    }*/
 
     createStars() {
         const starCount = 1000; // Number of stars
-        const starsGeometry = new THREE.BufferGeometry();
         const positions = new Float32Array(starCount * 3);
 
         for (let i = 0; i < starCount; i++) {
@@ -77,12 +76,13 @@ class SolarSystem {
             positions[i * 3 + 2] = (Math.random() - 0.5) * 2000; // Z position
         }
 
+        const starsGeometry = new THREE.BufferGeometry();
         starsGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-        const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 2 }); // Increased size
-        const stars = new THREE.Points(starsGeometry, starsMaterial);
+        const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 2 }); // Adjust size as needed
+        this.stars = new THREE.Points(starsGeometry, starsMaterial); // Store stars in a class property
 
-        this.scene.add(stars);
+        this.scene.add(this.stars);
     }
 
     createPlanets() {
@@ -108,22 +108,22 @@ class SolarSystem {
 
 
         if (data.name !== 'Sun') {
-            this.createOrbitPath(data.distance);
+            //this.createOrbitPath(data.distance*100);
         }
 
     }
 
     createOrbitPath(radius) {
         const segments = 128;
-        const material = new THREE.LineBasicMaterial({ color: 0x888888, opacity: 0.5, transparent: true });
+        const material = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.5, transparent: true }); // Changed color back to white
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(segments * 3);
 
         for (let i = 0; i < segments; i++) {
             const angle = (i / segments) * Math.PI * 2;
-            positions[i * 3] =Math.cos(angle) * radius;
+            positions[i * 3] = Math.cos(angle) * radius;
             positions[i * 3 + 1] = Math.sin(angle) * radius;
-            positions[i * 3 + 2] =0 ;
+            positions[i * 3 + 2] = 0;
         }
 
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -149,15 +149,15 @@ class SolarSystem {
         data.object = mesh;
         mesh.userData = {
             name: data.name,
-            rotationSpeed:0.05,
-            orbitSpeed: SCALE_FACTOR * Math.sqrt(G * M / Math.pow(data.distance || 1, 3)),
-            orbitRadius: data.distance || 0,
+            rotationSpeed: 0.1 / size, // Adjust rotation speed based on size
+            orbitSpeed: SCALE_FACTOR * Math.sqrt(G * M / Math.pow(data.distance*100 || 1, 3)),
+            orbitRadius: data.distance*100 || 0,
             orbitAngle: Math.random() * Math.PI * 2,
             orbitalPeriod:data.orbitalPeriod
         };
         this.scene.add(mesh);
         
-        //console.log(this.celestialBodies)
+        console.log(this.celestialBodies)
         if(data.moons){
             mesh.userData.moonlist=[]
 
@@ -279,6 +279,9 @@ class SolarSystem {
             this.camera.lookAt(planetPos);
             this.controls.target.copy(planetPos);
         }
+
+        // Update stars position to always be behind the camera
+        this.stars.position.copy(this.camera.position).setZ(this.camera.position.z - 1000); // Adjust distance as needed
     }
 
     animate() {
