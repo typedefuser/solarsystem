@@ -10,6 +10,46 @@ export function loadTexture(texturePath, onLoad, onError,...params) {
     );
 }
 
+
+export function onTextureLoaded(texture, geometry, color, position, size, data, scene, celestiallist) {
+    const material = texture ? new THREE.MeshBasicMaterial({ map: texture }) : new THREE.MeshBasicMaterial({ color: color });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.copy(position);
+    mesh.scale.set(size, size, size);
+    data.object = mesh;
+    mesh.userData = {
+        name: data.name,
+        rotationSpeed: 0.1 / size,
+        orbitSpeed: SCALE_FACTOR * Math.sqrt(G * M / Math.pow(data.distance * 100 || 1, 3)),
+        orbitRadius: data.distance * 100 || 0,
+        orbitAngle: Math.random() * Math.PI * 2,
+        orbitalPeriod: data.orbitalPeriod
+    };
+    scene.add(mesh);
+    celestiallist.push(mesh);
+
+    if (data.moons) {
+        data.moons.forEach(moonData => {
+            moonData.angle = Math.random() * 2 * Math.PI;
+
+            const moonX = moonData.distance * Math.cos(moonData.angle);
+            const moonY = moonData.distance * Math.sin(moonData.angle);
+            const _moon = planet(geometry, moonData.color, new THREE.Vector3(moonX, moonY, 0), moonData.size);
+
+            _moon.userData = {
+                angle: moonData.angle,
+                speed: moonData.speed,
+                dist: moonData.distance
+            };
+
+            // Make the moon a child of the planet
+            mesh.add(_moon); 
+        });
+    }
+}
+
+
+/*
 export function onTextureLoaded(texture, geometry, color, position, size, data,scene,celestiallist) {
     const material = new THREE.MeshBasicMaterial({ map: texture});
     const mesh = new THREE.Mesh(geometry, material);
@@ -38,7 +78,7 @@ export function onTextureLoaded(texture, geometry, color, position, size, data,s
 		scene.add(_moon);
 		})
 	}
-}
+}*/
 /*
 export function onTextureLoaded(texture, geometry, color, position, size, data,scene) {
     const material = new THREE.MeshBasicMaterial({ map: texture});

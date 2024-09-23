@@ -16,7 +16,7 @@ export const planetData = [
         color:'yellow',
         size:30,
         moons:[],
-        path:'./sun.jpg'
+        path:'./sun.jpg',
     },
     { 
         name: 'Mercury', 

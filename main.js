@@ -20,7 +20,7 @@ class SolarSystem {
         this.setupRenderer();
         this.setupCamera();
         this.setupLights();
-        //this.createSkybox.bind(this);
+        
         this.createStars(); // Add this line to create stars
         this.createPlanets();
         //console.log(this.celestialBodies.length)
@@ -46,25 +46,7 @@ class SolarSystem {
         const sunLight = new THREE.PointLight(0xffffff, 1.5);
         this.scene.add(sunLight);
     }
-/*
-    createSkybox() {
-        const loader = new THREE.CubeTextureLoader();
-        const texture = loader.load([
-            'milky_way.jpg', 'milky_way.jpg',
-            'stars.jpg', 'stars.jpg',
-            'milky_way.jpg', 'milky_way.jpg'
-        ],
-        (texture) => {
-            this.scene.background = texture;
-            console.log('Skybox loaded successfully');
-        },
-        undefined,
-        (error) => {
-            console.error('Error loading skybox textures:', error);
-        }
-    );
-        this.scene.background = texture;
-    }*/
+
 
     createStars() {
         const starCount = 1000; // Number of stars
@@ -85,9 +67,69 @@ class SolarSystem {
         this.scene.add(this.stars);
     }
 
-    createPlanets() {
+    /*createPlanets() {
         planetData.forEach(data => this.createCelestialBody(data));
-    }
+    }*/
+   
+        createPlanets() {
+            // 1. Preload textures
+            const loadingManager = new THREE.LoadingManager();
+            loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
+                console.log(`Started loading file: ${url}.\nLoaded ${itemsLoaded} of ${itemsTotal} files.`);
+            };
+    
+            loadingManager.onLoad = () => {
+                console.log('Loading complete!');
+            };
+    
+            loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+                console.log(`Loading file: ${url}.\nLoaded ${itemsLoaded} of ${itemsTotal} files.`);
+            };
+    
+            loadingManager.onError = (url) => {
+                console.log(`There was an error loading ${url}`);
+            };
+    
+            const textureLoader = new THREE.TextureLoader(loadingManager);
+    
+            const texturePromises = planetData.map(data => {
+                return new Promise((resolve, reject) => {
+                    if (data.path) {
+                        textureLoader.load(
+                            data.path,
+                            texture => resolve({ texture, data }),
+                            undefined,
+                            reject
+                        );
+                    } else {
+                        resolve({ texture: null, data });
+                    }
+                });
+            });
+    
+            Promise.all(texturePromises)
+                .then(results => {
+                    results.forEach(({ texture, data }) => {
+                        let x, y;
+                        if (data.name === 'Sun') {
+                            x = 0;
+                            y = 0;
+                        } else {
+                            x = data.distance * Math.cos(data.angle);
+                            y = data.distance * Math.sin(data.angle);
+                        }
+    
+                        onTextureLoaded(texture, this.geometry, data.color, new THREE.Vector3(x, y, 0), data.size, data, this.scene, this.celestialBodies);
+    
+                        if (data.name !== 'Sun') {
+                            //this.createOrbitPath(data.distance * 100);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error preloading textures:', error);
+                });
+        }
 
     createCelestialBody(data) {
         let x,y;
@@ -164,8 +206,8 @@ class SolarSystem {
             data.moons.forEach(moonData=>{
             moonData.angle=Math.random()*2*Math.PI;
     
-            var x=data.distance+moonData.distance*Math.cos(moonData.angle);
-            var y=data.distance+moonData.distance*Math.sin(moonData.angle);
+            let x=data.distance+moonData.distance*Math.cos(moonData.angle);
+            let y=data.distance+moonData.distance*Math.sin(moonData.angle);
             const _moon=planet(geometry,moonData.color,new THREE.Vector3(x,y,0),moonData.size);
             
             _moon.userData={
@@ -294,5 +336,5 @@ class SolarSystem {
 }
 
 // Initialize the solar system
-var solarSystem = new SolarSystem();
+let solarSystem = new SolarSystem();
 solarSystem.init()
