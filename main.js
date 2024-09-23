@@ -67,10 +67,10 @@ class SolarSystem {
         this.scene.add(this.stars);
     }
 
-    /*createPlanets() {
+    createPlanets() {
         planetData.forEach(data => this.createCelestialBody(data));
-    }*/
-   
+    }
+   /*
         createPlanets() {
             // 1. Preload textures
             const loadingManager = new THREE.LoadingManager();
@@ -130,7 +130,7 @@ class SolarSystem {
                     console.error('Error preloading textures:', error);
                 });
         }
-
+*/
     createCelestialBody(data) {
         let x,y;
         if(data.name=='Sun'){
